@@ -310,12 +310,10 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>#JAVA反射</p>
-<blockquote>
+                <h1 id="JAVA反射"><a href="#JAVA反射" class="headerlink" title="JAVA反射"></a>JAVA反射</h1><blockquote>
 <p>定义：Java语言中 一种 动态（运行时）访问、检测 &amp; 修改它本身的能力<br>动态（运行时）获取类的完整结构信息 &amp; 调用对象的方法</p>
 </blockquote>
-<p>###示例<br>####测试类</p>
-<pre><code>public class TestClass &#123;
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><h4 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h4><pre><code>public class TestClass &#123;
 
   private String MSG = &quot;Original&quot;;
   private final String FINAL_VALUE;
@@ -336,8 +334,7 @@
     return MSG;
   &#125;
 &#125;</code></pre>
-<p>####获取、修改变量</p>
-<pre><code>private static void modifyPrivateFiled() throws Exception &#123;
+<h4 id="获取、修改变量"><a href="#获取、修改变量" class="headerlink" title="获取、修改变量"></a>获取、修改变量</h4><pre><code>private static void modifyPrivateFiled() throws Exception &#123;
 
   TestClass testClass = new TestClass();
   Class mClass = testClass.getClass();
@@ -357,8 +354,7 @@
 Before Modify：MSG = Original
 Before Modify2：MSG = Original
 After Modify：MSG = Modified</code></pre>
-<p>####调用私有方法</p>
-<pre><code>private static void getPrivateMethod() throws Exception&#123;
+<h4 id="调用私有方法"><a href="#调用私有方法" class="headerlink" title="调用私有方法"></a>调用私有方法</h4><pre><code>private static void getPrivateMethod() throws Exception&#123;
 
    TestClass testClass = new TestClass();
    Class mClass = testClass.getClass();
@@ -372,8 +368,7 @@ After Modify：MSG = Modified</code></pre>
 
 
 Java Reflect</code></pre>
-<p>####修改常量</p>
-<pre><code>private static void modifyFinalFiled() throws Exception &#123;
+<h4 id="修改常量"><a href="#修改常量" class="headerlink" title="修改常量"></a>修改常量</h4><pre><code>private static void modifyFinalFiled() throws Exception &#123;
 
   TestClass testClass = new TestClass();
   Class mClass = testClass.getClass();
@@ -393,14 +388,12 @@ Java Reflect</code></pre>
 123
 456
 456</code></pre>
-<p>###优点</p>
-<ol>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ol>
 <li>框架开发中使用，例如动态配置</li>
 <li>插件开发中使用，Junit,Mockito</li>
 <li>应用扩展</li>
 </ol>
-<p>###缺点</p>
-<ol>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ol>
 <li>性能低</li>
 <li>可读性差</li>
 <li>只能在运行期间报错</li>
