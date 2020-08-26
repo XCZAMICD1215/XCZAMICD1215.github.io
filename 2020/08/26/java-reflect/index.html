@@ -312,189 +312,98 @@
             <div id="articleContent">
                 <p>#JAVA反射</p>
 <blockquote>
-<p>定义：Java语言中 一种 动态（运行时）访问、检测 &amp; 修改它本身的能力</p>
+<p>定义：Java语言中 一种 动态（运行时）访问、检测 &amp; 修改它本身的能力<br>动态（运行时）获取类的完整结构信息 &amp; 调用对象的方法</p>
 </blockquote>
-<blockquote>
-<p>动态（运行时）获取类的完整结构信息 &amp; 调用对象的方法</p>
-</blockquote>
-<p>###示例</p>
-<p>####测试类</p>
-<pre><code>
-public class TestClass &#123;
+<p>###示例<br>####测试类</p>
+<pre><code>public class TestClass &#123;
 
+  private String MSG = &quot;Original&quot;;
+  private final String FINAL_VALUE;
 
+  public TestClass()&#123;
+    this.FINAL_VALUE = &quot;123&quot;;
+  &#125;
 
-    private String MSG = &quot;Original&quot;;
+  public String getFinalValue()&#123;
+    return FINAL_VALUE;
+  &#125;
 
-    private final String FINAL_VALUE;
+  private void privateMethod(String head)&#123;
+    System.out.print(head);
+  &#125;
 
-
-
-    public TestClass()&#123;
-
-        this.FINAL_VALUE = &quot;123&quot;;
-
-    &#125;
-
-
-
-    public String getFinalValue()&#123;
-
-        return FINAL_VALUE;
-
-    &#125;
-
-
-
-    private void privateMethod(String head)&#123;
-
-        System.out.print(head);
-
-    &#125;
-
-
-
-    public String getMsg()&#123;
-
-        return MSG;
-
-    &#125;
-
-&#125;
-</code></pre>
+  public String getMsg()&#123;
+    return MSG;
+  &#125;
+&#125;</code></pre>
 <p>####获取、修改变量</p>
-<pre><code>
-private static void modifyPrivateFiled() throws Exception &#123;
+<pre><code>private static void modifyPrivateFiled() throws Exception &#123;
 
-    TestClass testClass = new TestClass();
+  TestClass testClass = new TestClass();
+  Class mClass = testClass.getClass();
 
-    Class mClass = testClass.getClass();
+  Field privateField = mClass.getDeclaredField(&quot;MSG&quot;);
+  if (privateField != null) &#123;
+    privateField.setAccessible(true);
+    System.out.println(&quot;Before Modify：MSG = &quot; + testClass.getMsg());
+    System.out.println(&quot;Before Modify2：MSG = &quot; + privateField.get(testClass));
 
-
-
-    Field privateField = mClass.getDeclaredField(&quot;MSG&quot;);
-
-
-
-    if (privateField != null) &#123;
-
-        privateField.setAccessible(true);
-
-        System.out.println(&quot;Before Modify：MSG = &quot; + testClass.getMsg());
-
-        System.out.println(&quot;Before Modify2：MSG = &quot; + privateField.get(testClass));
-
-
-
-        privateField.set(testClass, &quot;Modified&quot;);
-
-        System.out.println(&quot;After Modify：MSG = &quot; + testClass.getMsg());
-
-    &#125;
-
+    privateField.set(testClass, &quot;Modified&quot;);
+    System.out.println(&quot;After Modify：MSG = &quot; + testClass.getMsg());
+  &#125;
 &#125;
-
 
 
 Before Modify：MSG = Original
-
 Before Modify2：MSG = Original
-
-After Modify：MSG = Modified
-
-
-</code></pre>
+After Modify：MSG = Modified</code></pre>
 <p>####调用私有方法</p>
-<pre><code>
-private static void getPrivateMethod() throws Exception&#123;
+<pre><code>private static void getPrivateMethod() throws Exception&#123;
 
-    TestClass testClass = new TestClass();
+   TestClass testClass = new TestClass();
+   Class mClass = testClass.getClass();
 
-    Class mClass = testClass.getClass();
-
-
-
-    Method privateMethod =
-
-            mClass.getDeclaredMethod(&quot;privateMethod&quot;, String.class);
-
-
-
-    if (privateMethod != null) &#123;
-
-        privateMethod.setAccessible(true);
-
-        privateMethod.invoke(testClass, &quot;Java Reflect&quot;);
-
-    &#125;
-
+   Method privateMethod = mClass.getDeclaredMethod(&quot;privateMethod&quot;, String.class);
+   if (privateMethod != null) &#123;
+     privateMethod.setAccessible(true);
+     privateMethod.invoke(testClass, &quot;Java Reflect&quot;);
+   &#125;
 &#125;
 
 
-
-Java Reflect
-</code></pre>
+Java Reflect</code></pre>
 <p>####修改常量</p>
-<pre><code>
-private static void modifyFinalFiled() throws Exception &#123;
+<pre><code>private static void modifyFinalFiled() throws Exception &#123;
 
-    TestClass testClass = new TestClass();
+  TestClass testClass = new TestClass();
+  Class mClass = testClass.getClass();
 
-    Class mClass = testClass.getClass();
+  Field finalField = mClass.getDeclaredField(&quot;FINAL_VALUE&quot;);
+  if (finalField != null) &#123;
+    finalField.setAccessible(true);
+    System.out.println(&quot;Before Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
 
-
-
-    Field finalField = mClass.getDeclaredField(&quot;FINAL_VALUE&quot;);
-
-
-
-    if (finalField != null) &#123;
-
-        finalField.setAccessible(true);
-
-        System.out.println(&quot;Before Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
-
-
-
-        finalField.set(testClass, &quot;456&quot;);
-
-
-
-        System.out.println(&quot;After Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
-
-
-
-        System.out.println(&quot;Actually ：FINAL_VALUE = &quot; + testClass.getFinalValue());
-
-    &#125;
-
+    finalField.set(testClass, &quot;456&quot;);
+    System.out.println(&quot;After Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
+    System.out.println(&quot;Actually ：FINAL_VALUE = &quot; + testClass.getFinalValue());
+  &#125;
 &#125;
-
 
 
 123
-
 456
-
-456
-</code></pre>
+456</code></pre>
 <p>###优点</p>
 <ol>
-<li><p>框架开发中使用，例如动态配置</p>
-</li>
-<li><p>插件开发中使用，Junit,Mockito</p>
-</li>
-<li><p>应用扩展</p>
-</li>
+<li>框架开发中使用，例如动态配置</li>
+<li>插件开发中使用，Junit,Mockito</li>
+<li>应用扩展</li>
 </ol>
 <p>###缺点</p>
 <ol>
-<li><p>性能低</p>
-</li>
-<li><p>可读性差</p>
-</li>
-<li><p>只能在运行期间报错</p>
-</li>
+<li>性能低</li>
+<li>可读性差</li>
+<li>只能在运行期间报错</li>
 </ol>
 
             </div>
