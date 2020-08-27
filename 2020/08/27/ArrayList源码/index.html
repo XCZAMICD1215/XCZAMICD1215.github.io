@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Java反射, Slow Grow">
+    <meta name="keywords" content="ArrayList源码解析, Slow Grow">
     <meta name="description" content="一往无前虎山行，拨开云雾见光明，梦里花开牡丹亭，幻象成真歌舞升平。">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Java反射 | Slow Grow</title>
+    <title>ArrayList源码解析 | Slow Grow</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -242,12 +242,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/5.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Java反射</h1>
+                    <h1 class="description center-align post-title">ArrayList源码解析</h1>
                 </div>
             </div>
         </div>
@@ -269,8 +269,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/JAVA%E5%9F%BA%E7%A1%80/">
-                                <span class="chip bg-color">JAVA基础</span>
+                            <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                <span class="chip bg-color">集合类</span>
                             </a>
                         
                     </div>
@@ -294,7 +294,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-08-26
+                    2020-08-27
                 </div>
                 
 
@@ -310,94 +310,175 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="JAVA反射"><a href="#JAVA反射" class="headerlink" title="JAVA反射"></a>JAVA反射</h1><blockquote>
-<p>定义：Java语言中 一种 动态（运行时）访问、检测 &amp; 修改它本身的能力<br>动态（运行时）获取类的完整结构信息 &amp; 调用对象的方法</p>
+                <h1 id="Java-ArrayList-源码解析"><a href="#Java-ArrayList-源码解析" class="headerlink" title="Java  ArrayList 源码解析"></a>Java  ArrayList 源码解析</h1><h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><blockquote>
+<p>数组队列、随机访问、动态扩容、System.arraycopy(src, srcIndex, des, desIndex, length)</p>
 </blockquote>
-<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><h4 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h4><pre><code>public class TestClass &#123;
-
-  private String MSG = &quot;Original&quot;;
-  private final String FINAL_VALUE;
-
-  public TestClass()&#123;
-    this.FINAL_VALUE = &quot;123&quot;;
+<h3 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h3><pre><code>  private static final int DEFAULT_CAPACITY = 10;
+  private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = &#123;&#125;;
+  transient Object[] elementData; //成员的实际存储
+  private int size; //列表成员数量
+  protected transient int modCount = 0;  //用于 iterator，并发控制
+  private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+</code></pre>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><blockquote>
+<p>需要占用多少位就初始化多少位的数组，不需要就初始化一个空的数组</p>
+</blockquote>
+<pre><code>  public ArrayList() &#123;
+    this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
   &#125;
 
-  public String getFinalValue()&#123;
-    return FINAL_VALUE;
+  public ArrayList(int initialCapacity) &#123;
+    if (initialCapacity &gt; 0) &#123;
+      this.elementData = new Object[initialCapacity];
+    &#125; else if (initialCapacity == 0) &#123;
+      this.elementData = EMPTY_ELEMENTDATA;
+    &#125; else &#123;
+      throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+ initialCapacity);
+    &#125;
   &#125;
 
-  private void privateMethod(String head)&#123;
-    System.out.print(head);
+  public ArrayList(Collection&lt;? extends E&gt; c) &#123;
+    elementData = c.toArray();
+    if ((size = elementData.length) != 0) &#123;
+      if (elementData.getClass() != Object[].class)
+        elementData = Arrays.copyOf(elementData, size, Object[].class);
+      &#125; else &#123;
+        this.elementData = EMPTY_ELEMENTDATA;
+      &#125;
+    &#125;
+  &#125;
+</code></pre>
+<h3 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h3><blockquote>
+<p>插入数据前，计算容量，并扩容。<br>首次扩容， 目标大小 = Math.max(10, 希望容量)， 非首次扩容， 目标大小 = 希望容量<br>扩容到 Math.max(目标大小, 1.5 * 当前数组容量)</p>
+</blockquote>
+<pre><code>  private static int calculateCapacity(Object[] elementData, int minCapacity) &#123;
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) &#123;
+      return Math.max(DEFAULT_CAPACITY, minCapacity);
+    &#125;
+    return minCapacity;
   &#125;
 
-  public String getMsg()&#123;
-    return MSG;
+  private void ensureExplicitCapacity(int minCapacity) &#123;
+    modCount++;
+    if (minCapacity - elementData.length &gt; 0)
+      grow(minCapacity);
   &#125;
-&#125;</code></pre>
-<h4 id="获取、修改变量"><a href="#获取、修改变量" class="headerlink" title="获取、修改变量"></a>获取、修改变量</h4><pre><code>private static void modifyPrivateFiled() throws Exception &#123;
 
-  TestClass testClass = new TestClass();
-  Class mClass = testClass.getClass();
-
-  Field privateField = mClass.getDeclaredField(&quot;MSG&quot;);
-  if (privateField != null) &#123;
-    privateField.setAccessible(true);
-    System.out.println(&quot;Before Modify：MSG = &quot; + testClass.getMsg());
-    System.out.println(&quot;Before Modify2：MSG = &quot; + privateField.get(testClass));
-
-    privateField.set(testClass, &quot;Modified&quot;);
-    System.out.println(&quot;After Modify：MSG = &quot; + testClass.getMsg());
+  private void grow(int minCapacity) &#123;
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);
+    if (newCapacity - minCapacity &lt; 0)
+      newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
+      newCapacity = hugeCapacity(minCapacity);
+    elementData = Arrays.copyOf(elementData, newCapacity);
   &#125;
-&#125;
 
-
-Before Modify：MSG = Original
-Before Modify2：MSG = Original
-After Modify：MSG = Modified</code></pre>
-<h4 id="调用私有方法"><a href="#调用私有方法" class="headerlink" title="调用私有方法"></a>调用私有方法</h4><pre><code>private static void getPrivateMethod() throws Exception&#123;
-
-   TestClass testClass = new TestClass();
-   Class mClass = testClass.getClass();
-
-   Method privateMethod = mClass.getDeclaredMethod(&quot;privateMethod&quot;, String.class);
-   if (privateMethod != null) &#123;
-     privateMethod.setAccessible(true);
-     privateMethod.invoke(testClass, &quot;Java Reflect&quot;);
-   &#125;
-&#125;
-
-
-Java Reflect</code></pre>
-<h4 id="修改常量"><a href="#修改常量" class="headerlink" title="修改常量"></a>修改常量</h4><pre><code>private static void modifyFinalFiled() throws Exception &#123;
-
-  TestClass testClass = new TestClass();
-  Class mClass = testClass.getClass();
-
-  Field finalField = mClass.getDeclaredField(&quot;FINAL_VALUE&quot;);
-  if (finalField != null) &#123;
-    finalField.setAccessible(true);
-    System.out.println(&quot;Before Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
-
-    finalField.set(testClass, &quot;456&quot;);
-    System.out.println(&quot;After Modify：FINAL_VALUE = &quot; + finalField.get(testClass));
-    System.out.println(&quot;Actually ：FINAL_VALUE = &quot; + testClass.getFinalValue());
+  private static int hugeCapacity(int minCapacity) &#123;
+    if (minCapacity &lt; 0) 
+      throw new OutOfMemoryError();
+    return (minCapacity &gt; MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
   &#125;
-&#125;
+</code></pre>
+<h3 id="迭代器"><a href="#迭代器" class="headerlink" title="迭代器"></a>迭代器</h3><blockquote>
+<p>通过迭代器实现快速的顺序遍历</p>
+</blockquote>
+<pre><code>  private class Itr implements Iterator&lt;E&gt; &#123;
+    int cursor;       // index of next element to return
+    int lastRet = -1; // index of last element returned; -1 if no such
+    int expectedModCount = modCount;
+    Itr() &#123;&#125;
 
+    public boolean hasNext() &#123;
+      return cursor != size;
+    &#125;
 
-123
-456
-456</code></pre>
-<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ol>
-<li>框架开发中使用，例如动态配置</li>
-<li>插件开发中使用，Junit,Mockito</li>
-<li>应用扩展</li>
-</ol>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ol>
-<li>性能低</li>
-<li>可读性差</li>
-<li>只能在运行期间报错</li>
-</ol>
+    public E next() &#123;
+      checkForComodification();
+      int i = cursor;
+      if (i &gt;= size)
+        throw new NoSuchElementException();
+      Object[] elementData = ArrayList.this.elementData;
+      if (i &gt;= elementData.length)
+        throw new ConcurrentModificationException();
+      cursor = i + 1;
+      return (E) elementData[lastRet = i];
+    &#125; 
+
+    public void remove() &#123;
+      if (lastRet &lt; 0)
+        throw new IllegalStateException();
+      checkForComodification();
+      try &#123;
+        ArrayList.this.remove(lastRet);
+        cursor = lastRet;
+        lastRet = -1;
+        expectedModCount = modCount;
+      &#125; catch (IndexOutOfBoundsException ex) &#123;
+        throw new ConcurrentModificationException();
+      &#125;
+    &#125;
+
+    public void forEachRemaining(Consumer&lt;? super E&gt; consumer) &#123;
+      Objects.requireNonNull(consumer);
+      final int size = ArrayList.this.size;
+      int i = cursor;
+      if (i &gt;= size) &#123;
+        return;
+      &#125;
+      final Object[] elementData = ArrayList.this.elementData;
+      if (i &gt;= elementData.length) &#123;
+        throw new ConcurrentModificationException();
+      &#125;
+      while (i != size &amp;&amp; modCount == expectedModCount) &#123;
+        consumer.accept((E) elementData[i++]);
+      &#125;
+      cursor = i;
+      lastRet = i - 1;
+      checkForComodification();
+    &#125; 
+
+    final void checkForComodification() &#123;
+      if (modCount != expectedModCount)
+        throw new ConcurrentModificationException();
+      &#125;
+    &#125;
+</code></pre>
+<h3 id="遍历删除问题"><a href="#遍历删除问题" class="headerlink" title="遍历删除问题"></a>遍历删除问题</h3><blockquote>
+<p>foreach语法实际是通过iterator来遍历的</p>
+</blockquote>
+<pre><code>    List myList = new ArrayList&lt;&gt;();
+    myList.add(1);
+    myList.add(2);
+    myList.add(3);
+    myList.add(4);
+    myList.add(5);
+
+    //删除的元素不是倒数第二个节点时，由于modCount不一致，触发 checkForComodification
+
+    for (Object i : myList) &#123;
+      if (i.equals(3)) &#123;
+        myList.remove(i);
+      &#125;
+    &#125;
+
+    //删除的元素刚好是倒数第二个节点时，hasNext() size == cursor， 直接终止遍历，不会抛出异常
+
+    for (Object i : myList) &#123;
+      if (i.equals(4)) &#123;
+        myList.remove(i);
+      &#125;
+    &#125;
+
+    //正确的删除姿势
+    final Iterator itr = myList.iterator();
+    while (itr.hasNext()) &#123;
+      final Object next = itr.next();
+      if (next.equals(3)) &#123;
+        itr.remove();
+      &#125;
+    &#125;
+</code></pre>
 
             </div>
             <hr/>
@@ -423,7 +504,7 @@ Java Reflect</code></pre>
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://github.com/2020/08/26/java-reflect/">http://github.com/2020/08/26/java-reflect/</a>
+                    <a href="http://github.com/2020/08/27/ArrayList%E6%BA%90%E7%A0%81/">http://github.com/2020/08/27/ArrayList%E6%BA%90%E7%A0%81/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -461,8 +542,8 @@ Java Reflect</code></pre>
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/JAVA%E5%9F%BA%E7%A1%80/">
-                                    <span class="chip bg-color">JAVA基础</span>
+                                <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                    <span class="chip bg-color">集合类</span>
                                 </a>
                             
                         </div>
@@ -501,9 +582,10 @@ Java Reflect</code></pre>
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2020/08/27/ArrayList%E6%BA%90%E7%A0%81/">
                     <div class="card-image">
@@ -524,9 +606,9 @@ Java Reflect</code></pre>
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2020-08-27
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-27
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -539,6 +621,7 @@ Java Reflect</code></pre>
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -554,7 +637,7 @@ Java Reflect</code></pre>
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge right-badge text-color">
-                本篇&nbsp;<i class="far fa-dot-circle"></i>
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
                 <a href="/2020/08/26/java-reflect/">
@@ -588,7 +671,6 @@ Java Reflect</code></pre>
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
