@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="LinkedList源码解析, Slow Grow">
+    <meta name="keywords" content="红黑树, Slow Grow">
     <meta name="description" content="一往无前虎山行，拨开云雾见光明，梦里花开牡丹亭，幻象成真歌舞升平。">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>LinkedList源码解析 | Slow Grow</title>
+    <title>红黑树 | Slow Grow</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -242,12 +242,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">LinkedList源码解析</h1>
+                    <h1 class="description center-align post-title">红黑树</h1>
                 </div>
             </div>
         </div>
@@ -269,8 +269,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
-                                <span class="chip bg-color">集合类</span>
+                            <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+                                <span class="chip bg-color">数据结构</span>
                             </a>
                         
                     </div>
@@ -281,8 +281,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/Java%E5%9F%BA%E7%A1%80/" class="post-category">
-                                Java基础
+                            <a href="/categories/JAVA%E5%9F%BA%E7%A1%80/" class="post-category">
+                                JAVA基础
                             </a>
                         
                     </div>
@@ -294,7 +294,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-08-28
+                    2020-08-29
                 </div>
                 
 
@@ -310,250 +310,69 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="Java-LinkedList-源码解析"><a href="#Java-LinkedList-源码解析" class="headerlink" title="Java LinkedList 源码解析"></a>Java LinkedList 源码解析</h1><h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><blockquote>
-<p>头尾指针、双向链表</p>
+                <h2 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h2><h3 id="基本性质"><a href="#基本性质" class="headerlink" title="基本性质"></a>基本性质</h3><blockquote>
+<p>1、每个节点要么是黑色，要么是红色。<br>2、根节点是黑色的， 叶子节点也是黑色的（NIL = NULL， 也被当做叶子节点）。<br>3、每个红色结点的两个子结点一定都是黑色。<br>4、任意一结点到每个叶子结点的路径都包含数量相同的黑结点。<br><img src="https://s1.ax1x.com/2020/08/28/dIOfFs.png" style="zoom:70%;" /></p>
 </blockquote>
-<h3 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h3><pre><code>transient int size = 0;
-transient Node&lt;E&gt; first;
-transient Node&lt;E&gt; last;
-protected transient int modCount = 0;  // fail-fast 并发错误提示</code></pre>
-<h3 id="链表节点"><a href="#链表节点" class="headerlink" title="链表节点"></a>链表节点</h3><pre><code>private static class Node&lt;E&gt; &#123;
-  //双向链表
-    E item;
-    Node&lt;E&gt; next;
-    Node&lt;E&gt; prev;
-
-    Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;
-        this.item = element;
-        this.next = next;
-        this.prev = prev;
-    &#125;
-&#125;</code></pre>
-<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><pre><code>public LinkedList() &#123;
-&#125;
-
-public LinkedList(Collection&lt;? extends E&gt; c) &#123;
-    this();
-    addAll(c);
-&#125;</code></pre>
-<h3 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h3><pre><code>Node&lt;E&gt; node(int index) &#123;
-  //前半段，从前往后查，后半段从后往前查
-    if (index &lt; (size &gt;&gt; 1)) &#123;
-        Node&lt;E&gt; x = first;
-        for (int i = 0; i &lt; index; i++)
-            x = x.next;
-        return x;
-    &#125; else &#123;
-        Node&lt;E&gt; x = last;
-        for (int i = size - 1; i &gt; index; i--)
-            x = x.prev;
-        return x;
-    &#125;
-&#125;</code></pre>
-<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><pre><code>private void linkFirst(E e) &#123;
-    final Node&lt;E&gt; f = first;
-    final Node&lt;E&gt; newNode = new Node&lt;&gt;(null, e, f);
-    first = newNode;
-    if (f == null)
-        last = newNode;
-    else
-        f.prev = newNode;
-        size++;
-        modCount++;
-&#125;
-
-void linkLast(E e) &#123;
-    final Node&lt;E&gt; l = last;
-    final Node&lt;E&gt; newNode = new Node&lt;&gt;(l, e, null);
-    last = newNode;
-    if (l == null)
-        first = newNode;
-    else
-        l.next = newNode;
-        size++;
-        modCount++;
-&#125;
-
-void linkBefore(E e, Node&lt;E&gt; succ) &#123;
-    final Node&lt;E&gt; pred = succ.prev;
-    final Node&lt;E&gt; newNode = new Node&lt;&gt;(pred, e, succ);
-    succ.prev = newNode;
-    if (pred == null)
-        first = newNode;
-    else
-        pred.next = newNode;
-    size++;
-    modCount++;
-&#125;
-
-public boolean add(E e) &#123;
-    linkLast(e);
-    return true;
-&#125;
-
-public void add(int index, E element) &#123;
-    checkPositionIndex(index);
-    if (index == size)
-        linkLast(element);
-    else
-        linkBefore(element, node(index));
-&#125;
-</code></pre>
-<h3 id="移除"><a href="#移除" class="headerlink" title="移除"></a>移除</h3><pre><code>private E unlinkFirst(Node&lt;E&gt; f) &#123;
-    final E element = f.item;
-    final Node&lt;E&gt; next = f.next;
-    f.item = null;
-    f.next = null; // help GC
-    first = next;
-    if (next == null)
-        last = null;
-    else
-        next.prev = null;
-    size--;
-    modCount++;
-    return element;
-&#125;
-
-private E unlinkLast(Node&lt;E&gt; l) &#123;
-    final E element = l.item;
-    final Node&lt;E&gt; prev = l.prev;
-    l.item = null;
-    l.prev = null; // help GC
-    last = prev;
-    if (prev == null)
-        first = null;
-    else
-        prev.next = null;
-    size--;
-    modCount++;
-    return element;
-&#125;
-
-E unlink(Node&lt;E&gt; x) &#123;
-    final E element = x.item;
-    final Node&lt;E&gt; next = x.next;
-    final Node&lt;E&gt; prev = x.prev;
-    if (prev == null) &#123;
-        first = next;
-    &#125; else &#123;
-        prev.next = next;
-        x.prev = null;
-    &#125;
-
-  if (next == null) &#123;
-        last = prev;
-    &#125; else &#123;
-        next.prev = prev;
-        x.next = null;
-    &#125;
-
-    x.item = null;
-    size--;
-    modCount++;
-    return element;
-&#125;
-
-public E remove(int index) &#123;
-    checkElementIndex(index);
-    return unlink(node(index));
-&#125;</code></pre>
-<h3 id="迭代器"><a href="#迭代器" class="headerlink" title="迭代器"></a>迭代器</h3><blockquote>
-<p>内部类实现了ListIterator, 支持双向遍历</p>
+<h3 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h3><blockquote>
+<p>1、从根结点开始查找，把根结点设置为当前结点；<br>2、若当前结点为空，返回null；<br>3、若当前结点不为空，用当前结点的key跟查找key作比较；<br>4、若当前结点key等于查找key，那么该key就是查找目标，返回当前结点；<br>5、若当前结点key大于查找key，把当前结点的左子结点设置为当前结点，重复步骤2；<br>6、若当前结点key小于查找key，把当前结点的右子结点设置为当前结点，重复步骤2；</p>
 </blockquote>
-<pre><code>private class ListItr implements ListIterator&lt;E&gt; &#123;
-    private Node&lt;E&gt; lastReturned;
-    private Node&lt;E&gt; next;
-    private int nextIndex;
-    private int expectedModCount = modCount;
-
-      ListItr(int index) &#123;
-        next = (index == size) ? null : node(index);
-         nextIndex = index;
-    &#125;
-
-    public boolean hasNext() &#123;
-        return nextIndex &lt; size;
-    &#125;
-
-    public E next() &#123;
-        checkForComodification();
-        if (!hasNext())
-            throw new NoSuchElementException();
-        lastReturned = next;
-        next = next.next;
-        nextIndex++;
-        return lastReturned.item;
-    &#125;
-
-    public boolean hasPrevious() &#123;
-        return nextIndex &gt; 0;
-    &#125;
-
-    public E previous() &#123;
-        checkForComodification();
-        if (!hasPrevious())
-            throw new NoSuchElementException();
-        lastReturned = next = (next == null) ? last : next.prev;
-        nextIndex--;
-        return lastReturned.item;
-    &#125;
-
-    public int nextIndex() &#123;
-        return nextIndex;
-    &#125;
-
-    public int previousIndex() &#123;
-        return nextIndex - 1;
-    &#125;
-
-    public void remove() &#123;
-        checkForComodification();
-        if (lastReturned == null)
-            throw new IllegalStateException();
-        Node&lt;E&gt; lastNext = lastReturned.next;
-    unlink(lastReturned);
-    if (next == lastReturned)
-            next = lastNext;
-    else
-      nextIndex--;
-      lastReturned = null;
-      expectedModCount++;
-    &#125;
-
-    public void set(E e) &#123;
-        if (lastReturned == null)
-            throw new IllegalStateException();
-        checkForComodification();
-        lastReturned.item = e;
-    &#125;
-
-    public void add(E e) &#123;
-        checkForComodification();
-        lastReturned = null;
-        if (next == null)
-            linkLast(e);
-        else
-            linkBefore(e, next);
-            nextIndex++;
-            expectedModCount++;
-        &#125;
-
-    public void forEachRemaining(Consumer&lt;? super E&gt; action) &#123;
-        Objects.requireNonNull(action);
-        while (modCount == expectedModCount &amp;&amp; nextIndex &lt; size) &#123;
-            action.accept(next.item);
-            lastReturned = next;
-            next = next.next;
-            nextIndex++;
-         &#125;
-        checkForComodification();
-    &#125;
-
-    final void checkForComodification() &#123;
-        if (modCount != expectedModCount)
-            throw new ConcurrentModificationException();
-        &#125;
-    &#125;</code></pre>
+<h3 id="自平衡操作"><a href="#自平衡操作" class="headerlink" title="自平衡操作"></a>自平衡操作</h3><blockquote>
+<p>左旋：以某个结点作为支点(旋转结点)，其右子结点变为旋转结点的父结点，右子结点的左子结点变为旋转结点的右子结点，左子结点保持不变。<br>右旋：以某个结点作为支点(旋转结点)，其左子结点变为旋转结点的父结点，左子结点的右子结点变为旋转结点的左子结点，右子结点保持不变。</p>
+</blockquote>
+<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><h4 id="Step1-查找位置"><a href="#Step1-查找位置" class="headerlink" title="Step1: 查找位置"></a>Step1: 查找位置</h4><blockquote>
+<p>1、从根结点开始查找；<br>2、若当前结点为空，返回null；<br>3、若根结点不为空，那么把根结点作为当前结点；<br>4、若当前结点为null，返回当前结点的父结点，结束。<br>5、若当前结点key等于查找key，那么该key所在结点就是插入结点，更新结点的值，结束。<br>6、若当前结点key大于查找key，把当前结点的左子结点设置为当前结点，重复步骤4；<br>7、若当前结点key小于查找key，把当前结点的右子结点设置为当前结点，重复步骤4；</p>
+</blockquote>
+<h4 id="Step2-插入红色节点并自平衡"><a href="#Step2-插入红色节点并自平衡" class="headerlink" title="Step2: 插入红色节点并自平衡"></a>Step2: 插入红色节点并自平衡</h4><blockquote>
+<p>规定：新插入的结点是红色的（不会影响黑色节点数量）</p>
+</blockquote>
+<h5 id="情景1：父节点为黑色节点"><a href="#情景1：父节点为黑色节点" class="headerlink" title="情景1：父节点为黑色节点"></a>情景1：父节点为黑色节点</h5><blockquote>
+<p>直接插入，无需任何操作</p>
+</blockquote>
+<h5 id="情景2：父节点为红色节点"><a href="#情景2：父节点为红色节点" class="headerlink" title="情景2：父节点为红色节点"></a>情景2：父节点为红色节点</h5><h6 id="情景2-1-叔叔节点为红色节点"><a href="#情景2-1-叔叔节点为红色节点" class="headerlink" title="情景2.1 叔叔节点为红色节点"></a>情景2.1 叔叔节点为红色节点</h6><blockquote>
+<p>1、父节点、叔叔节点置为黑色，祖父节点置为红色<br>2、以祖父节点为当前节点，重新平衡</p>
+</blockquote>
+<h6 id="情景2-2-叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子"><a href="#情景2-2-叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子" class="headerlink" title="情景2.2 叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子"></a>情景2.2 叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子</h6><p>情景2.2.1 插入节点是父节点的左孩子</p>
+<blockquote>
+<p>1、父节点置为黑色，祖父节点置为红色<br>2、以祖父为中心右旋<br><img src="https://s1.ax1x.com/2020/08/28/dIXFTH.png" alt="image-20200828154031828" style="zoom:50%;" /></p>
+</blockquote>
+<p>情景2.2.2 插入节点是父节点的右孩子</p>
+<blockquote>
+<p>1、以父节点为中心左旋<br>2、执行2.2.1<br><img src="https://s1.ax1x.com/2020/08/28/dIX9OO.png" alt="image-20200828154349044" style="zoom:60%;" /></p>
+</blockquote>
+<h6 id="情景2-3-叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子"><a href="#情景2-3-叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子" class="headerlink" title="情景2.3 叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子"></a>情景2.3 叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子</h6><p>情景2.3.1 插入节点是父节点的右孩子</p>
+<blockquote>
+<p>1、父节点置为黑色，祖父节点置为红色<br>2、以祖父为中心左旋<br><img src="https://s1.ax1x.com/2020/08/28/dIXi0e.png" alt="image-20200828160145898" style="zoom:55%;" /></p>
+</blockquote>
+<p>情景2.3.2 插入节点是父节点的左孩子</p>
+<blockquote>
+<p>1、以父节点为中心右旋<br>2、执行2.3.1<br><img src="https://s1.ax1x.com/2020/08/28/dIXEtA.png" alt="image-20200828160600171" style="zoom:60%;" /></p>
+</blockquote>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>先找到替换节点替换到当前位置，在当做删除替换节点处理，场景1、2最终都能转变为场景3</p>
+<blockquote>
+<p>1、如果需要被删除节点有两个子节点，根据二叉搜索树的性质，我们需要找到它的后继节点（左子树中最大的节点或者右子树中最小的节点），用后继节点的值替换被删除节点的值，然后删除后继节点，如果后继节点有孩子的话，它只能有一个孩子（BST树的性质），此时变成情况2。<br>2、如果被删除节点只有一个孩子，根据红黑树的性质，此时只存在一种可能，被删除节点是黑色，它的孩子节点是红色且没有孩子节点，我们可以用子节点的值替换被删除节点的值，然后删除子节点。<br>3、被删除节点本来就是叶子节点（黑色或红色的孩子都是NIL的节点）。</p>
+</blockquote>
+<h5 id="情景1：删除节点为红色"><a href="#情景1：删除节点为红色" class="headerlink" title="情景1：删除节点为红色"></a>情景1：删除节点为红色</h5><blockquote>
+<p>直接删除</p>
+</blockquote>
+<h5 id="情景2：删除节点为黑色"><a href="#情景2：删除节点为黑色" class="headerlink" title="情景2：删除节点为黑色"></a>情景2：删除节点为黑色</h5><blockquote>
+<p>以下以待删节点为其父的左孩子为例，R待删节点，P父节点，S兄弟节点，SL、SR兄弟的左右孩子。</p>
+</blockquote>
+<h6 id="2-1-兄弟节点是红色"><a href="#2-1-兄弟节点是红色" class="headerlink" title="2.1 兄弟节点是红色"></a>2.1 兄弟节点是红色</h6><blockquote>
+<p>1、父节点置为红色，兄弟节点置为黑色，以父节点为中心左旋<br>2、父节点置为黑色，新兄弟置为红色，删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7iBL9.png" style="zoom:80%;" /></p>
+</blockquote>
+<h6 id="2-2-兄弟节点是黑色"><a href="#2-2-兄弟节点是黑色" class="headerlink" title="2.2 兄弟节点是黑色"></a>2.2 兄弟节点是黑色</h6><p>2.2.1 兄弟节点没有孩子</p>
+<blockquote>
+<p>1、父节点置为黑色，兄弟节点置为红色<br>2、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7i0sJ.png" style="zoom:60%;" /></p>
+</blockquote>
+<p>2.2.2 兄弟节点有红色的右孩子（删除节点是其父节点的右孩子时，判断依据是红色的左孩子）</p>
+<blockquote>
+<p>1、兄弟节点置为父节点颜色，父节点、兄弟节点的右孩子置黑，以父节点为中心左旋<br>2、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7isd1.png" style="zoom:55%;" /></p>
+</blockquote>
+<p>2.2.2 兄弟节点没有红色的右孩子</p>
+<blockquote>
+<p>1、兄弟置为红色，兄弟的左孩子置为黑色，以兄弟为中心右旋<br>2、新兄弟置为父的颜色，新兄弟的有孩子置为黑色，以父为中心左旋<br>3、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7irZR.png" style="zoom:70%;" /></p>
+</blockquote>
+<p>可视化  <a target="_blank" rel="noopener" href="https://www.cs.usfca.edu/~galles/visualization/RedBlack.html">https://www.cs.usfca.edu/~galles/visualization/RedBlack.html</a></p>
 
             </div>
             <hr/>
@@ -579,7 +398,7 @@ public E remove(int index) &#123;
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://github.com/2020/08/28/LinkedList%E6%BA%90%E7%A0%81/">http://github.com/2020/08/28/LinkedList%E6%BA%90%E7%A0%81/</a>
+                    <a href="http://github.com/2020/08/29/%E7%BA%A2%E9%BB%91%E6%A0%91/">http://github.com/2020/08/29/%E7%BA%A2%E9%BB%91%E6%A0%91/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -617,8 +436,8 @@ public E remove(int index) &#123;
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
-                                    <span class="chip bg-color">集合类</span>
+                                <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+                                    <span class="chip bg-color">数据结构</span>
                                 </a>
                             
                         </div>
@@ -657,9 +476,10 @@ public E remove(int index) &#123;
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2020/08/29/%E7%BA%A2%E9%BB%91%E6%A0%91/">
                     <div class="card-image">
@@ -677,9 +497,9 @@ public E remove(int index) &#123;
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2020-08-29
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-29
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -692,6 +512,7 @@ public E remove(int index) &#123;
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -710,24 +531,24 @@ public E remove(int index) &#123;
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2020/08/27/ArrayList%E6%BA%90%E7%A0%81/">
+                <a href="/2020/08/28/LinkedList%E6%BA%90%E7%A0%81/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/5.jpg" class="responsive-img" alt="ArrayList源码解析">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="LinkedList源码解析">
                         
-                        <span class="card-title">ArrayList源码解析</span>
+                        <span class="card-title">LinkedList源码解析</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            动态数组
+                            双向链表
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-27
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-28
                             </span>
                         <span class="publish-author">
                             
