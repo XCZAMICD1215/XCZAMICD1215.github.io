@@ -483,12 +483,12 @@ private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
                 setColor(sib, RED);
                 x = parentOf(x);
             &#125; else &#123;
-                 //兄弟为黑色，没有红色的右孩子
+                //兄弟为黑色，没有红色的右孩子
                 if (colorOf(rightOf(sib)) == BLACK) &#123;
-                      setColor(sib, RED);
+                    setColor(sib, RED);
                     setColor(leftOf(sib), BLACK);
-                      rotateRight(sib);
-                      sib = rightOf(parentOf(x));
+                    rotateRight(sib);
+                    sib = rightOf(parentOf(x));
                 &#125;
                 //兄弟为黑色，有红色的右孩子，兄弟置为父的颜色，父，兄弟的右孩子置为黑色，父左旋
                 setColor(sib, colorOf(parentOf(x)));
