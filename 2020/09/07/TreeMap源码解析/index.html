@@ -486,7 +486,7 @@ private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
                  //兄弟为黑色，没有红色的右孩子
                 if (colorOf(rightOf(sib)) == BLACK) &#123;
                       setColor(sib, RED);
-                    leftOf(sib).color = BLACK;
+                    setColor(leftOf(sib), BLACK);
                       rotateRight(sib);
                       sib = rightOf(parentOf(x));
                 &#125;
