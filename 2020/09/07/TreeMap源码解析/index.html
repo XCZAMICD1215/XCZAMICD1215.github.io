@@ -326,7 +326,6 @@ boolean color = BLACK;</code></pre>
 <h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><pre><code>final Entry&lt;K,V&gt; getEntry(Object key) &#123;
     if (key == null)
         throw new NullPointerException();
-    @SuppressWarnings(&quot;unchecked&quot;)
     Comparable&lt;? super K&gt; k = (Comparable&lt;? super K&gt;) key;
     Entry&lt;K,V&gt; p = root;
     while (p != null) &#123;
@@ -356,7 +355,6 @@ boolean color = BLACK;</code></pre>
     Entry&lt;K,V&gt; parent;
     if (key == null)
         throw new NullPointerException();
-    @SuppressWarnings(&quot;unchecked&quot;)
     Comparable&lt;? super K&gt; k = (Comparable&lt;? super K&gt;) key;
     //找悬挂的父节点
     do &#123;
@@ -388,7 +386,7 @@ private void fixAfterInsertion(Entry&lt;K,V&gt; x) &#123;
         if (parentOf(x) == leftOf(parentOf(parentOf(x)))) &#123;
             Entry&lt;K,V&gt; y = rightOf(parentOf(parentOf(x)));
             //父红叔红, 祖变红，父叔变黑，以祖节点作为新的当前节点
-            if (colorOf(y) == RED) &#123;
+              if (colorOf(y) == RED) &#123;
                   setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
@@ -398,18 +396,18 @@ private void fixAfterInsertion(Entry&lt;K,V&gt; x) &#123;
                   if (x == rightOf(parentOf(x))) &#123;
                     x = parentOf(x);
                       rotateLeft(x);
-                    &#125;
-                   //父红叔黑，插入的节点是其父节点的左孩子
+                &#125;
+                //父红叔黑，插入的节点是其父节点的左孩子
                 setColor(parentOf(x), BLACK);
-                   setColor(parentOf(parentOf(x)), RED);
+                setColor(parentOf(parentOf(x)), RED);
                 rotateRight(parentOf(parentOf(x)));
-            &#125;    
+            &#125;
         &#125; else &#123;
             //上面的镜像
             ...
         &#125;
     &#125;
-  root.color = BLACK;
+    root.color = BLACK;
 &#125;</code></pre>
 <h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><blockquote>
 <p>对于有两个孩子的节点，用右子树中的最左孩子R替代当前节点，删除R。<br>对于有一个孩子的节点，用孩子节点R替代当前节点，删除R。<br>对于没有孩子的节点，删除当前节点。<br>如果删除了一个黑色的点，需要自平衡。</p>
@@ -441,7 +439,7 @@ private void deleteEntry(Entry&lt;K,V&gt; p) &#123;
         replacement.parent = p.parent;
         if (p.parent == null)
             root = replacement;
-    else if (p == p.parent.left)
+        else if (p == p.parent.left)
             p.parent.left  = replacement;
         else
             p.parent.right = replacement;
@@ -460,7 +458,7 @@ private void deleteEntry(Entry&lt;K,V&gt; p) &#123;
             if (p == p.parent.left)
                 p.parent.left = null;
             else if (p == p.parent.right)
-        p.parent.right = null;
+                p.parent.right = null;
             p.parent = null;
         &#125;
     &#125;
@@ -474,8 +472,8 @@ private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
             Entry&lt;K,V&gt; sib = rightOf(parentOf(x));
             //兄弟是红色，兄弟置黑，父置红，父左旋
             if (colorOf(sib) == RED) &#123;
-          setColor(sib, BLACK);
-               setColor(parentOf(x), RED);
+                  setColor(sib, BLACK);
+                   setColor(parentOf(x), RED);
                 rotateLeft(parentOf(x));
                 sib = rightOf(parentOf(x));
             &#125;
@@ -487,21 +485,22 @@ private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
             &#125; else &#123;
                  //兄弟为黑色，没有红色的右孩子
                  if (colorOf(rightOf(sib)) == BLACK) &#123;
-            setColor(leftOf(sib), BLACK);
-          setColor(sib, RED);
-          rotateRight(sib);
-          sib = rightOf(parentOf(x));
+                    setColor(leftOf(sib), BLACK);
+                      setColor(sib, RED);
+                      rotateRight(sib);
+                      sib = rightOf(parentOf(x));
+                &#125;
+                //兄弟为黑色，有红色的右孩子，兄弟置为父的颜色，父，兄弟的右孩子置为黑色，父左旋
+                setColor(sib, colorOf(parentOf(x)));
+                setColor(parentOf(x), BLACK);
+                setColor(rightOf(sib), BLACK);
+                rotateLeft(parentOf(x));
+                x = root;
+             &#125;
+        &#125; else &#123; 
+            // 上面的镜像
+            ...
         &#125;
-        //兄弟为黑色，有红色的右孩子，兄弟置为父的颜色，父，兄弟的右孩子置为黑色，父左旋
-        setColor(sib, colorOf(parentOf(x)));
-        setColor(parentOf(x), BLACK);
-        setColor(rightOf(sib), BLACK);
-        rotateLeft(parentOf(x));
-        x = root;
-     &#125;
-    &#125; else &#123; 
-        // 上面的镜像
-        ...
     &#125;
     setColor(x, BLACK);
 &#125;</code></pre>
