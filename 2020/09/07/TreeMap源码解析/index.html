@@ -387,7 +387,7 @@ private void fixAfterInsertion(Entry&lt;K,V&gt; x) &#123;
             Entry&lt;K,V&gt; y = rightOf(parentOf(parentOf(x)));
             //父红叔红, 祖变红，父叔变黑，以祖节点作为新的当前节点
               if (colorOf(y) == RED) &#123;
-                  setColor(parentOf(x), BLACK);
+                setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
                 x = parentOf(parentOf(x));
@@ -472,15 +472,15 @@ private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
             Entry&lt;K,V&gt; sib = rightOf(parentOf(x));
             //兄弟是红色，兄弟置黑，父置红，父左旋
             if (colorOf(sib) == RED) &#123;
-                  setColor(sib, BLACK);
-                   setColor(parentOf(x), RED);
+                setColor(sib, BLACK);
+                setColor(parentOf(x), RED);
                 rotateLeft(parentOf(x));
                 sib = rightOf(parentOf(x));
             &#125;
 
             //兄弟有两个黑子的孩子
             if (colorOf(leftOf(sib))  == BLACK &amp;&amp; colorOf(rightOf(sib)) == BLACK) &#123;
-                 setColor(sib, RED);
+                setColor(sib, RED);
                 x = parentOf(x);
             &#125; else &#123;
                  //兄弟为黑色，没有红色的右孩子
