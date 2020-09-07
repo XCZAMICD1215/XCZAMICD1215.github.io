@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="红黑树, Slow Grow">
+    <meta name="keywords" content="TreeMap源码解析, Slow Grow">
     <meta name="description" content="一往无前虎山行，拨开云雾见光明，梦里花开牡丹亭，幻象成真歌舞升平。">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>红黑树 | Slow Grow</title>
+    <title>TreeMap源码解析 | Slow Grow</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -242,12 +242,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/12.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">红黑树</h1>
+                    <h1 class="description center-align post-title">TreeMap源码解析</h1>
                 </div>
             </div>
         </div>
@@ -269,8 +269,12 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
-                                <span class="chip bg-color">数据结构</span>
+                            <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                <span class="chip bg-color">集合类</span>
+                            </a>
+                        
+                            <a href="/tags/%E7%BA%A2%E9%BB%91%E6%A0%91/">
+                                <span class="chip bg-color">红黑树</span>
                             </a>
                         
                     </div>
@@ -281,8 +285,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/JAVA%E5%9F%BA%E7%A1%80/" class="post-category">
-                                JAVA基础
+                            <a href="/categories/Java%E5%9F%BA%E7%A1%80/" class="post-category">
+                                Java基础
                             </a>
                         
                     </div>
@@ -294,7 +298,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-08-29
+                    2020-09-07
                 </div>
                 
 
@@ -310,69 +314,197 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h2><h3 id="基本性质"><a href="#基本性质" class="headerlink" title="基本性质"></a>基本性质</h3><blockquote>
-<p>1、每个节点要么是黑色，要么是红色。<br>2、根节点是黑色的， 叶子节点也是黑色的（NIL = NULL， 也被当做叶子节点）。<br>3、每个红色结点的两个子结点一定都是黑色。<br>4、任意一结点到每个叶子结点的路径都包含数量相同的黑结点。<br><img src="https://s1.ax1x.com/2020/08/28/dIOfFs.png" style="zoom:70%;" /></p>
+                <h1 id="TreeMap-源码解析"><a href="#TreeMap-源码解析" class="headerlink" title="TreeMap 源码解析"></a>TreeMap 源码解析</h1><h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><blockquote>
+<p>红黑树</p>
 </blockquote>
-<h3 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h3><blockquote>
-<p>1、从根结点开始查找，把根结点设置为当前结点；<br>2、若当前结点为空，返回null；<br>3、若当前结点不为空，用当前结点的key跟查找key作比较；<br>4、若当前结点key等于查找key，那么该key就是查找目标，返回当前结点；<br>5、若当前结点key大于查找key，把当前结点的左子结点设置为当前结点，重复步骤2；<br>6、若当前结点key小于查找key，把当前结点的右子结点设置为当前结点，重复步骤2；</p>
+<h3 id="节点定义"><a href="#节点定义" class="headerlink" title="节点定义"></a>节点定义</h3><pre><code>K key;
+V value;
+Entry&lt;K,V&gt; left;
+Entry&lt;K,V&gt; right;
+Entry&lt;K,V&gt; parent;
+boolean color = BLACK;</code></pre>
+<h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><pre><code>final Entry&lt;K,V&gt; getEntry(Object key) &#123;
+    if (key == null)
+        throw new NullPointerException();
+    @SuppressWarnings(&quot;unchecked&quot;)
+    Comparable&lt;? super K&gt; k = (Comparable&lt;? super K&gt;) key;
+    Entry&lt;K,V&gt; p = root;
+    while (p != null) &#123;
+        int cmp = k.compareTo(p.key);
+        if (cmp &lt; 0)
+            p = p.left;
+        else if (cmp &gt; 0)
+            p = p.right;
+        else
+            return p;
+    &#125;
+    return null;
+&#125;</code></pre>
+<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><blockquote>
+<p>插入默认为红色，父节点为红色时，需要进行自平衡。</p>
 </blockquote>
-<h3 id="自平衡操作"><a href="#自平衡操作" class="headerlink" title="自平衡操作"></a>自平衡操作</h3><blockquote>
-<p>左旋：以某个结点作为支点(旋转结点)，其右子结点变为旋转结点的父结点，右子结点的左子结点变为旋转结点的右子结点，左子结点保持不变。<br>右旋：以某个结点作为支点(旋转结点)，其左子结点变为旋转结点的父结点，左子结点的右子结点变为旋转结点的左子结点，右子结点保持不变。</p>
+<pre><code>public V put(K key, V value) &#123;
+    Entry&lt;K,V&gt; t = root;
+    if (t == null) &#123;
+        compare(key, key); // type (and possibly null) check
+        root = new Entry&lt;&gt;(key, value, null);
+        size = 1;
+        modCount++;
+        return null;
+    &#125;
+    int cmp;
+    Entry&lt;K,V&gt; parent;
+    if (key == null)
+        throw new NullPointerException();
+    @SuppressWarnings(&quot;unchecked&quot;)
+    Comparable&lt;? super K&gt; k = (Comparable&lt;? super K&gt;) key;
+    //找悬挂的父节点
+    do &#123;
+        parent = t;
+        cmp = k.compareTo(t.key);
+        if (cmp &lt; 0)
+            t = t.left;
+        else if (cmp &gt; 0)
+            t = t.right;
+        else
+            return t.setValue(value);
+    &#125; while (t != null);
+    Entry&lt;K,V&gt; e = new Entry&lt;&gt;(key, value, parent);
+    if (cmp &lt; 0)
+        parent.left = e;
+    else
+        parent.right = e;
+    fixAfterInsertion(e);
+    size++;
+    modCount++;
+    return null;
+&#125;
+
+private void fixAfterInsertion(Entry&lt;K,V&gt; x) &#123;
+    //插入为红
+    x.color = RED;
+    while (x != null &amp;&amp; x != root &amp;&amp; x.parent.color == RED) &#123;
+        //父节点是祖父左孩子的情况
+        if (parentOf(x) == leftOf(parentOf(parentOf(x)))) &#123;
+            Entry&lt;K,V&gt; y = rightOf(parentOf(parentOf(x)));
+            //父红叔红, 祖变红，父叔变黑，以祖节点作为新的当前节点
+      if (colorOf(y) == RED) &#123;
+          setColor(parentOf(x), BLACK);
+                setColor(y, BLACK);
+                setColor(parentOf(parentOf(x)), RED);
+                x = parentOf(parentOf(x));
+      &#125; else &#123;
+          //父红叔黑，插入的节点是其父节点的右孩子
+          if (x == rightOf(parentOf(x))) &#123;
+            x = parentOf(x);
+          rotateLeft(x);
+        &#125;
+        //父红叔黑，插入的节点是其父节点的左孩子
+        setColor(parentOf(x), BLACK);
+        setColor(parentOf(parentOf(x)), RED);
+        rotateRight(parentOf(parentOf(x)));
+            &#125;
+        &#125; else &#123;
+            //上面的镜像
+            ...
+        &#125;
+    &#125;
+  root.color = BLACK;
+&#125;</code></pre>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><blockquote>
+<p>对于有两个孩子的节点，用右子树中的最左孩子R替代当前节点，删除R。<br>对于有一个孩子的节点，用孩子节点R替代当前节点，删除R。<br>对于没有孩子的节点，删除当前节点。<br>如果删除了一个黑色的点，需要自平衡。</p>
 </blockquote>
-<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><h4 id="Step1-查找位置"><a href="#Step1-查找位置" class="headerlink" title="Step1: 查找位置"></a>Step1: 查找位置</h4><blockquote>
-<p>1、从根结点开始查找；<br>2、若当前结点为空，返回null；<br>3、若根结点不为空，那么把根结点作为当前结点；<br>4、若当前结点为null，返回当前结点的父结点，结束。<br>5、若当前结点key等于查找key，那么该key所在结点就是插入结点，更新结点的值，结束。<br>6、若当前结点key大于查找key，把当前结点的左子结点设置为当前结点，重复步骤4；<br>7、若当前结点key小于查找key，把当前结点的右子结点设置为当前结点，重复步骤4；</p>
-</blockquote>
-<h4 id="Step2-插入红色节点并自平衡"><a href="#Step2-插入红色节点并自平衡" class="headerlink" title="Step2: 插入红色节点并自平衡"></a>Step2: 插入红色节点并自平衡</h4><blockquote>
-<p>规定：新插入的结点是红色的（不会影响黑色节点数量）</p>
-</blockquote>
-<h5 id="情景1：父节点为黑色节点"><a href="#情景1：父节点为黑色节点" class="headerlink" title="情景1：父节点为黑色节点"></a>情景1：父节点为黑色节点</h5><blockquote>
-<p>直接插入，无需任何操作</p>
-</blockquote>
-<h5 id="情景2：父节点为红色节点"><a href="#情景2：父节点为红色节点" class="headerlink" title="情景2：父节点为红色节点"></a>情景2：父节点为红色节点</h5><h6 id="情景2-1-叔叔节点为红色节点"><a href="#情景2-1-叔叔节点为红色节点" class="headerlink" title="情景2.1 叔叔节点为红色节点"></a>情景2.1 叔叔节点为红色节点</h6><blockquote>
-<p>1、父节点、叔叔节点置为黑色，祖父节点置为红色<br>2、以祖父节点为当前节点，重新平衡</p>
-</blockquote>
-<h6 id="情景2-2-叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子"><a href="#情景2-2-叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子" class="headerlink" title="情景2.2 叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子"></a>情景2.2 叔叔节点不存在或为黑色节点，父节点是祖父节点的左孩子</h6><p>情景2.2.1 插入节点是父节点的左孩子</p>
-<blockquote>
-<p>1、父节点置为黑色，祖父节点置为红色<br>2、以祖父为中心右旋<br><img src="https://s1.ax1x.com/2020/08/28/dIXFTH.png" alt="image-20200828154031828" style="zoom:50%;" /></p>
-</blockquote>
-<p>情景2.2.2 插入节点是父节点的右孩子</p>
-<blockquote>
-<p>1、以父节点为中心左旋<br>2、执行2.2.1<br><img src="https://s1.ax1x.com/2020/08/28/dIX9OO.png" alt="image-20200828154349044" style="zoom:60%;" /></p>
-</blockquote>
-<h6 id="情景2-3-叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子"><a href="#情景2-3-叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子" class="headerlink" title="情景2.3 叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子"></a>情景2.3 叔叔节点不存在或为黑色节点，父节点是祖父节点的右孩子</h6><p>情景2.3.1 插入节点是父节点的右孩子</p>
-<blockquote>
-<p>1、父节点置为黑色，祖父节点置为红色<br>2、以祖父为中心左旋<br><img src="https://s1.ax1x.com/2020/08/28/dIXi0e.png" alt="image-20200828160145898" style="zoom:55%;" /></p>
-</blockquote>
-<p>情景2.3.2 插入节点是父节点的左孩子</p>
-<blockquote>
-<p>1、以父节点为中心右旋<br>2、执行2.3.1<br><img src="https://s1.ax1x.com/2020/08/28/dIXEtA.png" alt="image-20200828160600171" style="zoom:60%;" /></p>
-</blockquote>
-<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>红黑树的删除可以分解为以下几种情况：</p>
-<blockquote>
-<p>1 删除的节点没有孩子<br>1.1 节点颜色是红色，直接删除<br>1.2 节点颜色是黑色，删除并进行重新平衡<br>2 删除的节点有一个孩子,根据红黑树的性质，只存在一种情况，即删除的节点为黑色，存在一个红色的孩子节点。此时，只需要将子节点连接到删除节点的父节点，并将子节点涂黑。<br>3 删除节点有两个孩子，此时，可以先找到节点的后继节点（右子树的最左节点），然后转变为情况1或情况2进行处理。</p>
-</blockquote>
-<h5 id="情景1：删除节点为红色"><a href="#情景1：删除节点为红色" class="headerlink" title="情景1：删除节点为红色"></a>情景1：删除节点为红色</h5><blockquote>
-<p>直接删除</p>
-</blockquote>
-<h5 id="情景2：删除节点为黑色"><a href="#情景2：删除节点为黑色" class="headerlink" title="情景2：删除节点为黑色"></a>情景2：删除节点为黑色</h5><blockquote>
-<p>以下以待删节点为其父的左孩子为例，R待删节点，P父节点，S兄弟节点，SL、SR兄弟的左右孩子。</p>
-</blockquote>
-<h6 id="2-1-兄弟节点是红色"><a href="#2-1-兄弟节点是红色" class="headerlink" title="2.1 兄弟节点是红色"></a>2.1 兄弟节点是红色</h6><blockquote>
-<p>1、父节点置为红色，兄弟节点置为黑色，以父节点为中心左旋<br>2、父节点置为黑色，新兄弟置为红色，删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7iBL9.png" style="zoom:80%;" /></p>
-</blockquote>
-<h6 id="2-2-兄弟节点是黑色"><a href="#2-2-兄弟节点是黑色" class="headerlink" title="2.2 兄弟节点是黑色"></a>2.2 兄弟节点是黑色</h6><p>2.2.1 兄弟节点没有孩子</p>
-<blockquote>
-<p>1、父节点置为黑色，兄弟节点置为红色<br>2、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7i0sJ.png" style="zoom:60%;" /></p>
-</blockquote>
-<p>2.2.2 兄弟节点有红色的右孩子</p>
-<blockquote>
-<p>1、兄弟节点置为父节点颜色，父节点、兄弟节点的右孩子置黑，以父节点为中心左旋<br>2、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7isd1.png" style="zoom:55%;" /></p>
-</blockquote>
-<p>2.2.2 兄弟节点没有红色的右孩子</p>
-<blockquote>
-<p>1、兄弟置为红色，兄弟的左孩子置为黑色，以兄弟为中心右旋<br>2、新兄弟置为父的颜色，新兄弟的有孩子置为黑色，以父为中心左旋<br>3、删除当前节点<br><img src="https://s1.ax1x.com/2020/08/29/d7irZR.png" style="zoom:70%;" /></p>
-</blockquote>
-<p>可视化  <a target="_blank" rel="noopener" href="https://www.cs.usfca.edu/~galles/visualization/RedBlack.html">https://www.cs.usfca.edu/~galles/visualization/RedBlack.html</a></p>
+<pre><code>public V remove(Object key) &#123;
+    Entry&lt;K,V&gt; p = getEntry(key);
+    if (p == null)
+        return null;
+    V oldValue = p.value;
+    deleteEntry(p);
+    return oldValue;
+&#125;
+
+private void deleteEntry(Entry&lt;K,V&gt; p) &#123;
+    modCount++;
+    size--;
+
+    //右子树的最左孩子
+    if (p.left != null &amp;&amp; p.right != null) &#123;
+        Entry&lt;K,V&gt; s = successor(p);
+        p.key = s.key;
+        p.value = s.value;
+        p = s;
+    &#125;
+
+    Entry&lt;K,V&gt; replacement = (p.left != null ? p.left : p.right);
+    //要删的节点有孩子，把孩子接到父节点上
+    if (replacement != null) &#123;
+        replacement.parent = p.parent;
+        if (p.parent == null)
+            root = replacement;
+    else if (p == p.parent.left)
+            p.parent.left  = replacement;
+        else
+            p.parent.right = replacement;
+
+        p.left = p.right = p.parent = null;
+        if (p.color == BLACK)
+            fixAfterDeletion(replacement);
+    &#125; else if (p.parent == null) &#123;
+        root = null;
+    &#125; else &#123;
+      //要删的节点没孩子
+        if (p.color == BLACK)
+            fixAfterDeletion(p);
+
+        if (p.parent != null) &#123;
+            if (p == p.parent.left)
+                p.parent.left = null;
+            else if (p == p.parent.right)
+        p.parent.right = null;
+            p.parent = null;
+        &#125;
+    &#125;
+&#125;
+
+//核心思想是少了一个黑色节点，要补回来
+private void fixAfterDeletion(Entry&lt;K,V&gt; x) &#123;
+    while (x != root &amp;&amp; colorOf(x) == BLACK) &#123;
+        //删除节点是左孩子的情况
+        if (x == leftOf(parentOf(x))) &#123;
+            Entry&lt;K,V&gt; sib = rightOf(parentOf(x));
+            //兄弟是红色，兄弟置黑，父置红，父左旋
+            if (colorOf(sib) == RED) &#123;
+          setColor(sib, BLACK);
+               setColor(parentOf(x), RED);
+                rotateLeft(parentOf(x));
+                sib = rightOf(parentOf(x));
+            &#125;
+
+            //兄弟有两个黑子的孩子
+            if (colorOf(leftOf(sib))  == BLACK &amp;&amp; colorOf(rightOf(sib)) == BLACK) &#123;
+                 setColor(sib, RED);
+                x = parentOf(x);
+            &#125; else &#123;
+                 //兄弟为黑色，没有红色的右孩子
+                 if (colorOf(rightOf(sib)) == BLACK) &#123;
+            setColor(leftOf(sib), BLACK);
+          setColor(sib, RED);
+          rotateRight(sib);
+          sib = rightOf(parentOf(x));
+        &#125;
+        //兄弟为黑色，有红色的右孩子，兄弟置为父的颜色，父，兄弟的右孩子置为黑色，父左旋
+        setColor(sib, colorOf(parentOf(x)));
+        setColor(parentOf(x), BLACK);
+        setColor(rightOf(sib), BLACK);
+        rotateLeft(parentOf(x));
+        x = root;
+     &#125;
+    &#125; else &#123; 
+        // 上面的镜像
+        ...
+    &#125;
+    setColor(x, BLACK);
+&#125;</code></pre>
 
             </div>
             <hr/>
@@ -398,7 +530,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://github.com/2020/08/29/red-black-tree/">http://github.com/2020/08/29/red-black-tree/</a>
+                    <a href="http://github.com/2020/09/07/TreeMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">http://github.com/2020/09/07/TreeMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -436,8 +568,12 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
-                                    <span class="chip bg-color">数据结构</span>
+                                <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                    <span class="chip bg-color">集合类</span>
+                                </a>
+                            
+                                <a href="/tags/%E7%BA%A2%E9%BB%91%E6%A0%91/">
+                                    <span class="chip bg-color">红黑树</span>
                                 </a>
                             
                         </div>
@@ -476,9 +612,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2020/09/07/TreeMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
                     <div class="card-image">
@@ -504,9 +641,9 @@ boolea
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2020-09-07
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-09-07
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -519,6 +656,7 @@ boolea
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -541,24 +679,24 @@ boolea
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2020/08/28/LinkedList%E6%BA%90%E7%A0%81/">
+                <a href="/2020/08/29/red-black-tree/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="LinkedList源码解析">
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="红黑树">
                         
-                        <span class="card-title">LinkedList源码解析</span>
+                        <span class="card-title">红黑树</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            双向链表
+                            自平衡的二叉查找树
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-28
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-08-29
                             </span>
                         <span class="publish-author">
                             
@@ -575,8 +713,8 @@ boolea
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
-                        <span class="chip bg-color">集合类</span>
+                    <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+                        <span class="chip bg-color">数据结构</span>
                     </a>
                     
                 </div>
