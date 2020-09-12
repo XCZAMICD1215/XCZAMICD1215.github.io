@@ -1,0 +1,1116 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="HashMap源码解析, Slow Grow">
+    <meta name="description" content="一往无前虎山行，拨开云雾见光明，梦里花开牡丹亭，幻象成真歌舞升平。">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>HashMap源码解析 | Slow Grow</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.1.1"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">Slow Grow</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">Slow Grow</div>
+        <div class="logo-desc">
+            
+            一往无前虎山行，拨开云雾见光明，梦里花开牡丹亭，幻象成真歌舞升平。
+            
+        </div>
+    </div>
+
+    
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/XCZAMICD1215" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/XCZAMICD1215" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/12.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">HashMap源码解析</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="container content">
+
+    
+    <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                <span class="chip bg-color">集合类</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Java%E5%9F%BA%E7%A1%80/" class="post-category">
+                                Java基础
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2020-09-12
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="Java-HashMap-源码解析"><a href="#Java-HashMap-源码解析" class="headerlink" title="Java HashMap 源码解析"></a>Java HashMap 源码解析</h1><h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><blockquote>
+<p>散列表，哈希，数组，链表，红黑树<br><img src="https://user-gold-cdn.xitu.io/2019/11/7/16e43984197d2d87?imageslim" alt="HashMap"></p>
+</blockquote>
+<h3 id="成员变量"><a href="#成员变量" class="headerlink" title="成员变量"></a>成员变量</h3><pre><code>static final int DEFAULT_INITIAL_CAPACITY = 1 &lt;&lt; 4; // 初始容量
+static final float DEFAULT_LOAD_FACTOR = 0.75f; //动态因子
+static final int MAXIMUM_CAPACITY = 1 &lt;&lt; 30;
+static final int TREEIFY_THRESHOLD = 8; //转变为红黑树的阈值
+static final int UNTREEIFY_THRESHOLD = 6; //转变为链表的阈值
+static final int MIN_TREEIFY_CAPACITY = 64; //当HashMap中的table的长度大于64的时候，这时候才会允许桶内的链表转成红黑树（要求桶内的链表长度达到8）
+transient Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet;
+final float loadFactor;
+transient int modCount;
+transient int size;
+transient Node&lt;K,V&gt;[] table;
+int threshold; //当&#123;@link HashMap#size&#125; &gt;= &#123;@link HashMap#threshold&#125;的时候，数组要进行扩容操作</code></pre>
+<h3 id="关键方法"><a href="#关键方法" class="headerlink" title="关键方法"></a>关键方法</h3><h4 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h4><pre><code>public HashMap(int initialCapacity, float loadFactor) &#123;
+    // 指定初始容量，指定负载因子
+    if (initialCapacity &lt; 0)
+        throw new IllegalArgumentException(&quot;Illegal initial capacity: &quot; + initialCapacity);
+    if (initialCapacity &gt; MAXIMUM_CAPACITY)
+        // 指定的初始容量大于最大容量，则取最大容量
+        initialCapacity = MAXIMUM_CAPACITY;
+    if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+        // 检查负载因子
+        throw new IllegalArgumentException(&quot;Illegal load factor: &quot; + loadFactor);
+    this.loadFactor = loadFactor;
+    this.threshold = tableSizeFor(initialCapacity);
+&#125;</code></pre>
+<pre><code>static final int tableSizeFor(int cap) &#123; //数组的大小为2的次幂，可以通过按位与替代取余操作
+    int n = cap - 1;
+    n |= n &gt;&gt;&gt; 1;
+    n |= n &gt;&gt;&gt; 2;
+    n |= n &gt;&gt;&gt; 4;
+    n |= n &gt;&gt;&gt; 8;
+    n |= n &gt;&gt;&gt; 16;
+    return (n &lt; 0) ? 1 : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+&#125;</code></pre>
+<h4 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h4><blockquote>
+<p>将容量扩为两倍，同时将阈值扩为两倍。<br>重新计算元素位置，对于红黑树，拆分后也要重新平衡。</p>
+</blockquote>
+<pre><code>final Node&lt;K,V&gt;[] resize() &#123;
+    //备份哈希表
+    Node&lt;K,V&gt;[] oldTab = table;
+    //取原哈希表容量和阈值
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    //哈希表不为空
+    if (oldCap &gt; 0) &#123;
+        //原哈希表容量已超过最大容量，直接返回旧的哈希表，并置阈值为最大整形值
+        if (oldCap &gt;= MAXIMUM_CAPACITY) &#123;
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        &#125;
+        //扩容两倍后新容量小于最大容量且老容量大于默认基本容量(也就是16)
+        else if ((newCap = oldCap &lt;&lt; 1) &lt; MAXIMUM_CAPACITY &amp;&amp; oldCap &gt;= DEFAULT_INITIAL_CAPACITY)  
+            newThr = oldThr &lt;&lt; 1; // double threshold 阈值也扩大两倍
+    &#125;
+    else if (oldThr &gt; 0) // initial capacity was placed in threshold 如果哈希表为空，但是阈值大于0，则置哈希表容量为阈值
+        newCap = oldThr;
+    else &#123;               // zero initial threshold signifies using defaults
+        //哈希表为空，阈值为空则置默认容量和阈值
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    &#125;
+    //如果前面没有得到最新的阈值，则重新计算
+    if (newThr == 0) &#123;
+        float ft = (float)newCap * loadFactor;
+        newThr = (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (float)MAXIMUM_CAPACITY ? (int)ft : Integer.MAX_VALUE);
+    &#125;
+    threshold = newThr;
+    @SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)
+    //创建扩容后的哈希表
+    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])new Node[newCap];
+    table = newTab;
+    //原哈希表不为空时，将原来的元素复制到新的哈希表中
+    if (oldTab != null) &#123;
+        for (int j = 0; j &lt; oldCap; ++j) &#123;
+            Node&lt;K,V&gt; e;
+            if ((e = oldTab[j]) != null) &#123;
+                //删除旧哈希表当前元素
+                oldTab[j] = null;
+                //如果当前节点只有一个元素（即无链表或者红黑树），直接复制元素
+                if (e.next == null)
+                    newTab[e.hash &amp; (newCap - 1)] = e;
+                //如果元素为红黑树类型，则添加到红黑树中
+                else if (e instanceof TreeNode)
+                    // 执行红黑树调整(split在下面说明)
+                    ((TreeNode&lt;K,V&gt;)e).split(this, newTab, j, oldCap);
+                //节点的元素链表保持顺序
+                else &#123; // preserve order
+                    //lohead指low低位的头结点，loTail表示低位的尾结点
+                    Node&lt;K,V&gt; loHead = null, loTail = null;
+                    //hohead指low低位的头结点，hoTail表示低位的尾结点
+                    Node&lt;K,V&gt; hiHead = null, hiTail = null;
+                    //用来表示下一个结点
+                    Node&lt;K,V&gt; next;
+                    do &#123;
+                        next = e.next;
+                        /*
+                            举个栗子：
+                            oldCap为16，则减1后为：     000000 1111
+                            key1的hash值为：            110000 1010
+                            key2的hash值为：            110001 1010
+                            容量拓展之后，newCap减1后为：000001 1111
+                            所以key2的hash值与容量计算出来的位置改变了，因此需要调整key2的数据到高位部分去
+                        */
+
+                        //元素的hash值与旧容量按位与，如果结果等于0则表示继续保持当前位置，不需要调整位置
+                        if ((e.hash &amp; oldCap) == 0) &#123;
+                            //第一次执行时，找到头结点
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        &#125;
+                        //元素位置发生改变，需要移动到高位
+                        else &#123;
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        &#125;
+                    &#125; while ((e = next) != null);
+                    if (loTail != null) &#123;
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    &#125;
+                    if (hiTail != null) &#123;
+                        hiTail.next = null;
+                        //使用j+oldCap将元素移动到高位
+                        newTab[j + oldCap] = hiHead;
+                    &#125;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+    return newTab;
+&#125;
+
+//扩容时对红黑树的调整，可能会出现红黑树转链表，或者链表转红黑树的情况
+final void split(HashMap&lt;K,V&gt; map, Node&lt;K,V&gt;[] tab, int index, int bit) &#123;
+    //获取当前元素
+    TreeNode&lt;K,V&gt; b = this;
+    TreeNode&lt;K,V&gt; loHead = null, loTail = null;
+    TreeNode&lt;K,V&gt; hiHead = null, hiTail = null;
+    int lc = 0, hc = 0;
+    从根节点开始遍历红黑树，统计出需要放到低位和需要移动到高位的元素个数，以便下面能通过个数重新平衡红黑树或者转换为链表
+    for (TreeNode&lt;K,V&gt; e = b, next; e != null; e = next) &#123;
+        next = (TreeNode&lt;K,V&gt;)e.next;
+        e.next = null;
+        if ((e.hash &amp; bit) == 0) &#123;
+            if ((e.prev = loTail) == null)
+                loHead = e;
+            else
+                loTail.next = e;
+            loTail = e;
+            ++lc;
+        &#125;
+        else &#123;
+            if ((e.prev = hiTail) == null)
+                hiHead = e;
+            else
+                hiTail.next = e;
+            hiTail = e;
+            ++hc;
+        &#125;
+    &#125;
+    //元素需要放到哈希表低位的处理
+    if (loHead != null) &#123;
+        //如果元素个数小于等于红黑树转链表的阀值时，进行转链表操作
+        if (lc &lt;= UNTREEIFY_THRESHOLD)
+            tab[index] = loHead.untreeify(map);
+        else &#123;//不需要转换链表
+            //将根节点放入哈希表首元素
+            tab[index] = loHead;
+            //判断是否有需要移动到高位的，如果有则需要重新平衡红黑树，没有的话则说明红黑树元素个数不变，位置也不需要调整了
+            if (hiHead != null) // (else is already treeified)
+                loHead.treeify(tab);
+        &#125;
+    &#125;
+    //元素需要放到哈希表高位的处理，操作跟上述差不多，只不过是在哈希表高位进行操作
+    if (hiHead != null) &#123;
+        if (hc &lt;= UNTREEIFY_THRESHOLD)
+            tab[index + bit] = hiHead.untreeify(map);
+        else &#123;
+            tab[index + bit] = hiHead;
+            if (loHead != null)
+                hiHead.treeify(tab);
+        &#125;
+    &#125;
+&#125;</code></pre>
+<h4 id="红黑树与链表之间转换"><a href="#红黑树与链表之间转换" class="headerlink" title="红黑树与链表之间转换"></a>红黑树与链表之间转换</h4><pre><code>final void treeify(Node&lt;K,V&gt;[] tab) &#123;
+    TreeNode&lt;K,V&gt; root = null;
+    //循环遍历双向链表节点，组成红黑树
+    for (TreeNode&lt;K,V&gt; x = this, next; x != null; x = next) &#123;
+        //遍历下一个节点
+        next = (TreeNode&lt;K,V&gt;)x.next;
+        //初始化左右节点为空
+        x.left = x.right = null;
+        //初始化根节点，将链表首个元素作为根节点，置为黑色
+        if (root == null) &#123;
+            x.parent = null;
+            x.red = false;
+            root = x;
+        &#125;
+        else &#123;//非根节点操作
+            K k = x.key;
+            int h = x.hash;
+            Class&lt;?&gt; kc = null;
+            //从根节点开始遍历红黑树，找到插入位置
+            for (TreeNode&lt;K,V&gt; p = root;;) &#123;
+                int dir, ph;
+                K pk = p.key;
+                //首先根据hash值排序
+                if ((ph = p.hash) &gt; h)
+                    dir = -1;
+                else if (ph &lt; h)
+                    dir = 1;
+                //当出现hash冲突，key没有实现Comparable接口，或者实现了Comparable接口但是还无法区分顺序时，使用终极PK方法tieBreakOrder决出顺序
+                else if ((kc == null &amp;&amp;
+                          (kc = comparableClassFor(k)) == null) ||
+                         (dir = compareComparables(kc, k, pk)) == 0)
+                    dir = tieBreakOrder(k, pk);
+                //备份当前节点的父节点
+                TreeNode&lt;K,V&gt; xp = p;
+                //根据之前对比出的结果，来决定接下来要遍历左节点还是右节点，如果没有左节点或右节点，则在该位置进行插入新节点
+                if ((p = (dir &lt;= 0) ? p.left : p.right) == null) &#123;
+                    //指定新节点的父节点，并将新节点放在指定的子节点上
+                    x.parent = xp;
+                    if (dir &lt;= 0)
+                        xp.left = x;
+                    else
+                        xp.right = x;
+                    //自平衡 https://xczamicd1215.github.io/2020/09/07/TreeMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/
+                    root = balanceInsertion(root, x); 
+                    break;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+    //保证根节点是哈希表的首元素
+    moveRootToFront(tab, root);
+&#125;
+
+/*将红黑树转换为链表
+    因为红黑树的TreeNode节点包含了链表属性，所以直接通过链表的方式遍历红黑树的节点，并整合到新的链表上
+*/
+final Node&lt;K,V&gt; untreeify(HashMap&lt;K,V&gt; map) &#123;
+    Node&lt;K,V&gt; hd = null, tl = null;
+    //循环遍历将红黑树中的每个元素取出来并串联成一个单向链表，返回头节点
+    for (Node&lt;K,V&gt; q = this; q != null; q = q.next) &#123;
+        Node&lt;K,V&gt; p = map.replacementNode(q, null);
+        if (tl == null)
+            hd = p;
+        else
+            tl.next = p;
+        tl = p;
+    &#125;
+    return hd;
+&#125;</code></pre>
+<h4 id="新增操作"><a href="#新增操作" class="headerlink" title="新增操作"></a>新增操作</h4><blockquote>
+<p>hash = x.hash() &amp; (x.hash()&gt;&gt;16)</p>
+</blockquote>
+<pre><code>final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) &#123;
+    Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, i;
+    //哈希表为空或者表长度为0，则拓展哈希表
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    /*
+    使用key的hash值与哈希表长度按位与计算出元素位置，判断当前位置上是否有值，若没有则直接将元素放入,否则进一步判断
+    */
+    if ((p = tab[i = (n - 1) &amp; hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    else &#123;
+        Node&lt;K,V&gt; e; K k;
+        //若key已存在，则更新value值
+        if (p.hash == hash &amp;&amp;
+            ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+            e = p;
+        //若元素属于红黑树时，则执行红黑树的元素判断
+        else if (p instanceof TreeNode)
+            e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);
+        else &#123;
+            //元素处在链表中，循环遍历链表
+            for (int binCount = 0; ; ++binCount) &#123;
+                //遍历到链表尾部
+                if ((e = p.next) == null) &#123;
+                    //为元素创建新结点
+                    p.next = newNode(hash, key, value, null);
+                    //如果链表上元素个数达到了转换数的阈值(默认6)时，将链表转换为红黑树
+                    if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        //执行链表转红黑树操作
+                        treeifyBin(tab, hash);
+                    break;
+                &#125;
+                //如果键值已存在则直接返回(因为之前e= p.next()时已经取到了旧值)
+                if (e.hash == hash &amp;&amp;
+                    ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+                    break;
+                //与前面的e= p.next()组成循环遍历
+                p = e;
+            &#125;
+        &#125;
+        //e!=null表示存在key相同的元素
+        if (e != null) &#123; // existing mapping for key
+            V oldValue = e.value;
+            //存在相同key时，判断是否需要覆盖值value
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            //回调函数，hashmap中没有实现，提供给linkedHashMap使用的
+            afterNodeAccess(e);
+            return oldValue;
+        &#125;
+    &#125;
+    //结构修改次数增加，迭代时检查发现此值变了则抛出ConcurrentModificationException异常
+    ++modCount;
+    //哈希表键值对数量增加，若超过阈值时则进行扩容
+    if (++size &gt; threshold)
+        resize();
+    //回调函数，hashmap中没有实现，提供给linkedHashMap使用的
+    afterNodeInsertion(evict);
+    return null;
+&#125;
+
+/**
+ * Tree version of putVal.红黑树的插入方法
+ */
+final TreeNode&lt;K,V&gt; putTreeVal(HashMap&lt;K,V&gt; map, Node&lt;K,V&gt;[] tab,
+                               int h, K k, V v) &#123;
+    Class&lt;?&gt; kc = null;
+    boolean searched = false;
+    //获取根节点
+    TreeNode&lt;K,V&gt; root = (parent != null) ? root() : this;
+    //从根节点开始遍历
+    for (TreeNode&lt;K,V&gt; p = root;;) &#123;
+        int dir, ph; K pk;
+        /*
+        因为hashmap中的红黑树是根据key的hash值来排序的，所以先判断新插入的key的hash值与当前父节点hash值
+        */
+        //hash值小于父节点哈希值，取左节点
+        if ((ph = p.hash) &gt; h)
+            dir = -1;
+        //hash值大于父节点哈希值，取右节点
+        else if (ph &lt; h)
+            dir = 1;
+        //执行到此说明hash值相等，继续比较键值是否相等，若相等则说明已存在相同键值，故直接返回当前节点的位置
+        else if ((pk = p.key) == k || (k != null &amp;&amp; k.equals(pk)))
+            return p;
+        //hash相等，但是key不相等
+        else if ((kc == null &amp;&amp;
+                  //key未实现了Comparable接口
+                  (kc = comparableClassFor(k)) == null) ||
+                  //或者key实现了Comparable接口但是比较结果返回为0，说明还是无法判断出key的顺序，此时产生了hash碰撞
+                 (dir = compareComparables(kc, k, pk)) == 0) &#123;
+            //判断是否已经执行过查找，貌似一个红黑树只能查找一次
+            if (!searched) &#123;
+                TreeNode&lt;K,V&gt; q, ch;
+                searched = true;
+                //分别查找左右树，查找相同的对象，如果找不到，说明确实没有相同对象存在
+                if (((ch = p.left) != null &amp;&amp;
+                     (q = ch.find(h, k, kc)) != null) ||
+                    ((ch = p.right) != null &amp;&amp;
+                     (q = ch.find(h, k, kc)) != null))
+                    return q;
+            &#125;
+            //hash相等，key不相等，并且key没有实现Comparable接口，保持一致的处理规则，也就是想办法统一的排序规则，以便继续往下遍历
+            dir = tieBreakOrder(k, pk);
+        &#125;
+
+        //备份当前节点
+        TreeNode&lt;K,V&gt; xp = p;
+        //若遍历完红黑树，还是没有找到相同key的结点，则进行新插入操作
+        if ((p = (dir &lt;= 0) ? p.left : p.right) == null) &#123;
+            /*
+            备份当前节点的下一个节点：相当于在链表的两个节点a,b之间插入c时，先备份a.next，然后将a.next指向c，最后再将b.prev指向c
+            这些操作是给LinkedHashMap预留的
+            */
+            Node&lt;K,V&gt; xpn = xp.next;
+            //创建新节点
+            TreeNode&lt;K,V&gt; x = map.newTreeNode(h, k, v, xpn);
+            //根据之前比较hash值结果，将新节点放到的当前节点的左子节点或者右子节点
+            if (dir &lt;= 0)
+                xp.left = x;
+            else
+                xp.right = x;
+            //将当前节点的next指向新节点
+            xp.next = x;
+            //设置新节点的父节点和前驱节点为当前节点
+            x.parent = x.prev = xp;
+            //如果当前结点还有后继节点时，将新节点作为它的前驱
+            if (xpn != null)
+                ((TreeNode&lt;K,V&gt;)xpn).prev = x;
+            //重排红黑树使其保证平衡(调用balanceInsertion方法实现，实现代码改编自CLR-公共语言运行库，使用变色和左右旋转的原理)，并将root节点放到哈希表的首元素
+            moveRootToFront(tab, balanceInsertion(root, x));
+            return null;
+        &#125;
+    &#125;
+&#125;
+//将链表转红黑树
+final void treeifyBin(Node&lt;K,V&gt;[] tab, int hash) &#123;
+    int n, index; Node&lt;K,V&gt; e;
+    //如果哈希表为空或哈希表长度小于最小允许转为红黑树的长度时，先进行扩容处理(因为一般由于hash表长度太小时，更容易出现hash冲突，此时通过扩容解决更方便，性能也更高)
+    if (tab == null || (n = tab.length) &lt; MIN_TREEIFY_CAPACITY)
+        resize();
+    //取出当前hash值对应的哈希表位置
+    else if ((e = tab[index = (n - 1) &amp; hash]) != null) &#123;
+        TreeNode&lt;K,V&gt; hd = null, tl = null;
+        do &#123;
+            //创建红黑树节点
+            TreeNode&lt;K,V&gt; p = replacementTreeNode(e, null);
+            //将第一个元素作为头节点，并取出原链表的元素，重新排成双向链表
+            if (tl == null)
+                hd = p;
+            else &#123;
+                p.prev = tl;
+                tl.next = p;
+            &#125;
+            tl = p;
+        &#125; while ((e = e.next) != null);
+        //如果根节点的元素不为空则进行红黑树的平衡操作
+        if ((tab[index] = hd) != null)
+            hd.treeify(tab);
+    &#125;
+&#125;</code></pre>
+
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">XuChengZhang</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="http://github.com/2020/09/12/HashMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">http://github.com/2020/09/12/HashMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">XuChengZhang</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                                    <span class="chip bg-color">集合类</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2020/09/12/HashMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="HashMap源码解析">
+                        
+                        <span class="card-title">HashMap源码解析</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            Java HashMap 源码解析实现原理
+散列表，哈希，数组，链表，红黑树
+
+成员变量static final int DEFAULT_INITIAL_CAPACITY = 1 &lt;&lt; 4; // 初始容量
+static fin
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-09-12
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Java%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    Java基础
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                        <span class="chip bg-color">集合类</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2020/09/07/TreeMap%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="TreeMap源码解析">
+                        
+                        <span class="card-title">TreeMap源码解析</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            自平衡红黑树实现
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-09-07
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Java%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    Java基础
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E9%9B%86%E5%90%88%E7%B1%BB/">
+                        <span class="chip bg-color">集合类</span>
+                    </a>
+                    
+                    <a href="/tags/%E7%BA%A2%E9%BB%91%E6%A0%91/">
+                        <span class="chip bg-color">红黑树</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+<!-- 代码块折行 -->
+
+<style type="text/css">
+code[class*="language-"], pre[class*="language-"] { white-space: pre !important; }
+</style>
+
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+    <div class="container row center-align" style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            <span id="year">2019</span>
+            <a href="/about" target="_blank">XuChengZhang</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+            
+            
+            
+            
+            
+            <span id="busuanzi_container_site_pv">
+                |&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;<span id="busuanzi_value_site_pv"
+                    class="white-color"></span>&nbsp;次
+            </span>
+            
+            
+            <span id="busuanzi_container_site_uv">
+                |&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;<span id="busuanzi_value_site_uv"
+                    class="white-color"></span>&nbsp;人
+            </span>
+            
+            <br>
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script src="/js/search.js"></script>
+<script type="text/javascript">
+$(function () {
+    searchFunc("/search.xml", 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
